@@ -2,6 +2,9 @@
 Change log for block_taskchain_navigation
 ========================================
 
+2024-12-09 (44)
+ - In access control script, set time/minute on dates to most common value in current course.
+
 2024-03-01 (43)
  - make JS compatible with obfuscated element ID on blocks in Moodle >= 4.2
 

@@ -202,7 +202,6 @@ function taskchain_navigation_accesscontrol_form($course, $block_instance, $acti
     list($viewableuntil, $viewableuntildate, $viewableuntildisable) = get_timestamp_and_date('viewableuntil', null, $time);
     list($viewablefrom, $viewablefromdate, $viewablefromdisable) = get_timestamp_and_date('viewablefrom', null, $time);
     list($cutoff, $cutoffdate, $cutoffdisable) = get_timestamp_and_date('cutoff', null, $time);
-
     list($gradingdue, $gradingduedate, $gradingduedisable) = get_timestamp_and_date('gradingdue', null, $time);
 
     $sortgradeitems   = optional_param('sortgradeitems',   0, PARAM_INT);
@@ -392,7 +391,8 @@ function taskchain_navigation_accesscontrol_form($course, $block_instance, $acti
                       'gradeoverridden', 'gradehidden',    'gradehiddenuntil',
                       'gradeexcluded',   'gradelocked',    'gradelocktime',
                       'groupmode',       'groupingid',     'groupmembersonly',
-                      'visible',         'indent',         'section',    'uploadlimit');
+                      'visible',         'indent',         'section',
+                      'uploadlimit');
 
     // add switches to enable/disable filters
     $filters = filter_get_available_in_context($course->context);
@@ -607,7 +607,6 @@ function taskchain_navigation_accesscontrol_form($course, $block_instance, $acti
                     $has_gradingdue = in_array($cm->modname, array('assign'));
                     $has_standardgrading = in_array($cm->modname, array('assign', 'data', 'forum', 'glossary', 'lesson', 'lti', 'quiz'));
                 }
-
                 // The EnglishCentral module defines its form elements in "classes/utils.php".
                 if ($cm->modname=='englishcentral') {
                     $has_available = true;
@@ -783,6 +782,29 @@ function taskchain_navigation_accesscontrol_form($course, $block_instance, $acti
             if ($select) {
                 $selected_cmids[$cm->id] = $cm;
             }
+        }
+    }
+
+    // Calculate default start/end times by finding the
+    // best (= most common) times in the current $course.
+    if (empty($_POST)) {
+
+        // Cache the list of time fields in modules.
+        $fields = get_mod_fields();
+
+        if (count($availablemods)) {
+            set_default_time($fields, $availablemods, $availablefrom, $availablefromdate, 'availablefrom', $course->id);
+            set_default_time($fields, $availablemods, $availableuntil, $availableuntildate, 'availableuntil', $course->id);
+        }
+        if (count($viewablemods)) {
+            set_default_time($fields, $viewablemods, $viewablefrom, $viewablefromdate, 'viewablefrom', $course->id);
+            set_default_time($fields, $viewablemods, $viewableuntil, $viewableuntildate, 'viewableuntil', $course->id);
+        }
+        if (count($cutoffmods)) {
+            set_default_time($fields, $cutoffmods, $cutoff, $cutoffdate, 'cutoff', $course->id);
+        }
+        if (count($gradingmods)) {
+            set_default_time($fields, $gradingmods, $gradingdue, $gradingduedate, 'gradingdue', $course->id);
         }
     }
 
@@ -1470,28 +1492,7 @@ function taskchain_navigation_accesscontrol_form($course, $block_instance, $acti
     if (count($selected_cmids) && (count($selected_settings) || $action=='delete')) {
 
         $success = true;
-        $fields = array('availablefrom', 'availableuntil','viewablefrom', 'viewableuntil', 'maxgrade', 'rating');
-        $fields = array(
-            'assign'         => array_combine($fields, array('allowsubmissionsfromdate', 'duedate', '', '', 'grade', '')),
-            'assignment'     => array_combine($fields, array('timeavailable', 'timedue', '', '', 'grade', '')),
-            'attendance'     => array_combine($fields, array('', '', '', '', 'grade', '')),
-            'choice'         => array_combine($fields, array('timeopen', 'timeclose', '', '', '', '')),
-            'data'           => array_combine($fields, array('timeavailablefrom', 'timeavailableto', 'timeviewfrom', 'timeviewto', 'scale', 'assessed')),
-            'englishcentral' => array_combine($fields, array('activityopen', 'activityclose', 'videoopen', 'videoclose', 'grade', '')),
-            'feedback'       => array_combine($fields, array('timeopen', 'timeclose', '', '', '', '')),
-            'forum'          => array_combine($fields, array('assesstimestart', 'assesstimefinish', '', '', 'scale', 'assessed')),
-            'glossary'       => array_combine($fields, array('assesstimestart', 'assesstimefinish', '', '', 'scale', 'assessed')),
-            'hotpot'         => array_combine($fields, array('timeopen', 'timeclose', '', '', 'grade', '')),
-            'lesson'         => array_combine($fields, array('available', 'deadline', '', '', 'grade', '')),
-            'questionnaire'  => array_combine($fields, array('opendate', 'closedate', '', '', 'grade', '')),
-            'quiz'           => array_combine($fields, array('timeopen', 'timeclose', '', '', 'grade', '')),
-            'reader'         => array_combine($fields, array('timeopen', 'timeclose', '', '', 'maxgrade', '')),
-            'scorm'          => array_combine($fields, array('timeopen', 'timeclose', '', '', 'maxgrade', '')),
-            'taskchain'      => array_combine($fields, array('timeopen', 'timeclose', '', '', 'gradelimit', '')),
-            'workshop'       => array_combine($fields, array('submissionstart', 'submissionend', 'assessmentstart', 'assessmentend', 'grade ', ''))
-        );
-
-
+        $fields = get_mod_fields();
         $table_columns = array();
 
         // make sure mod pix path is set
@@ -3270,6 +3271,87 @@ function taskchain_navigation_accesscontrol_form($course, $block_instance, $acti
     echo '</form>'."\n";
 }
 
+function get_mod_fields() {
+    $fields = array('availablefrom', 'availableuntil','viewablefrom', 'viewableuntil', 'maxgrade', 'rating');
+    $fields = array(
+        'assign'         => array_combine($fields, array('allowsubmissionsfromdate', 'duedate', '', '', 'grade', '')),
+        'assignment'     => array_combine($fields, array('timeavailable', 'timedue', '', '', 'grade', '')),
+        'attendance'     => array_combine($fields, array('', '', '', '', 'grade', '')),
+        'choice'         => array_combine($fields, array('timeopen', 'timeclose', '', '', '', '')),
+        'data'           => array_combine($fields, array('timeavailablefrom', 'timeavailableto', 'timeviewfrom', 'timeviewto', 'scale', 'assessed')),
+        'englishcentral' => array_combine($fields, array('activityopen', 'activityclose', 'videoopen', 'videoclose', 'grade', '')),
+        'feedback'       => array_combine($fields, array('timeopen', 'timeclose', '', '', '', '')),
+        'forum'          => array_combine($fields, array('assesstimestart', 'assesstimefinish', '', '', 'scale', 'assessed')),
+        'glossary'       => array_combine($fields, array('assesstimestart', 'assesstimefinish', '', '', 'scale', 'assessed')),
+        'hotpot'         => array_combine($fields, array('timeopen', 'timeclose', '', '', 'grade', '')),
+        'lesson'         => array_combine($fields, array('available', 'deadline', '', '', 'grade', '')),
+        'questionnaire'  => array_combine($fields, array('opendate', 'closedate', '', '', 'grade', '')),
+        'quiz'           => array_combine($fields, array('timeopen', 'timeclose', '', '', 'grade', '')),
+        'reader'         => array_combine($fields, array('timeopen', 'timeclose', '', '', 'maxgrade', '')),
+        'scorm'          => array_combine($fields, array('timeopen', 'timeclose', '', '', 'maxgrade', '')),
+        'taskchain'      => array_combine($fields, array('timeopen', 'timeclose', '', '', 'gradelimit', '')),
+        'workshop'       => array_combine($fields, array('submissionstart', 'submissionend', 'assessmentstart', 'assessmentend', 'grade ', ''))
+    );
+    return $fields;
+}
+
+function set_default_time(&$fields, &$mods, &$timestamp, &$date, $timefield, $courseid) {
+    global $DB;
+
+    $sql = array();
+    foreach (array_keys($mods) as $mod) {
+        if (array_key_exists($mod, $fields)) {
+            if (array_key_exists($timefield, $fields[$mod])) {
+                $sql[$mod] = $fields[$mod][$timefield];
+            }
+        }
+
+    }
+    foreach ($sql as $mod => $field) {
+        $select = 'CONCAT('."'$mod-'".', id) AS modid, '.$field.' AS modtime';
+        $from = '{'.$mod.'}';
+        $where = 'course = ? AND '.$field.' IS NOT NULL AND '.$field.' > ?';
+        $sql[$mod] = "SELECT $select FROM $from WHERE $where";
+        $params[] = $courseid;
+        $params[] = 0;
+    }
+    if ($sql = implode(') UNION (', $sql)) {
+        $modtimes = array();
+        if ($records = $DB->get_records_sql_menu("($sql)", $params)) {
+            foreach ($records as $modid => $modtime) {
+                // N: day of week (1 = Monday)
+                // H: 24-hour format of an hour with leading zeros
+                // i: Minutes with leading zeros
+                $modtime = date('N-H-i-0', $modtime);
+                if (empty($modtimes[$modtime])) {
+                    $modtimes[$modtime] = 1;
+                } else {
+                    $modtimes[$modtime]++;
+                }
+            }
+        }
+
+        // Sort by value in reverse order
+        // (i.e. most common value first)
+        // and maintain key association.
+        arsort($modtimes);
+
+        // Select first key, if any.
+        if ($modtime = key($modtimes)) {
+            // Y: year as 4-digit number
+            // n: month (without leading zeros)
+            // j: day of month (without leading zeroes)
+            list($year, $month, $day) = explode('-', date('Y-n-j', $timestamp));
+            list($wday, $hours, $mins, $secs) = explode('-', $modtime);
+            $timestamp = make_timestamp($year, $month, $day, $hours, $mins, $secs);
+            $date[0] = $timestamp;
+            $date['seconds'] = $secs;
+            $date['minutes'] = $mins;
+            $date['hours'] = $hours;
+        }
+    }
+}
+
 function format_setting($name, $value, $str,
                         $ratings, $modgradetypes, $modgradescales,
                         $gradecategories, $groupmodes, $groupings,
@@ -4368,7 +4450,7 @@ function get_completionfield($strman, $plugin, $modname, $name, $value, $fields)
     // -----------------------------------------------
     // SELECT TABLE_NAME, COLUMN_NAME
     // FROM information_schema.COLUMNS
-    // WHERE TABLE_SCHEMA = 'mdl_28' AND TABLE_NAME IN (
+    // WHERE TABLE_SCHEMA = 'mdl_401' AND TABLE_NAME IN (
     //     SELECT REPLACE(plugin, 'mod_', 'mdl_')
     //     FROM mdl_28.mdl_config_plugins
     //     WHERE plugin LIKE 'mod_%' AND name = 'version'

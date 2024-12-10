@@ -2,6 +2,9 @@
 Change log for block_taskchain_navigation
 ========================================
 
+2024-12-10 (45)
+ - fix name of time fields in mod_reader
+
 2024-12-09 (44)
  - In access control script, set time/minute on dates to most common value in current course. Rename viewablefrom/until to readonly until/from
 

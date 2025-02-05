@@ -3290,6 +3290,7 @@ function get_mod_fields() {
         'reader'         => array_combine($fields, array('availablefrom', 'availableuntil', 'readonlyuntil', 'readonlyfrom', 'maxgrade', '')),
         'scorm'          => array_combine($fields, array('timeopen', 'timeclose', '', '', 'maxgrade', '')),
         'taskchain'      => array_combine($fields, array('timeopen', 'timeclose', '', '', 'gradelimit', '')),
+        'vocab'          => array_combine($fields, array('activityopen', 'activityclose', 'gamesopen', 'gamesclose', 'grademax', '')),
         'workshop'       => array_combine($fields, array('submissionstart', 'submissionend', 'assessmentstart', 'assessmentend', 'grade ', ''))
     );
     return $fields;
@@ -3308,9 +3309,10 @@ function set_default_time(&$fields, &$mods, &$timestamp, &$date, $timefield, $co
 
     }
     foreach ($sql as $mod => $field) {
-        $select = 'CONCAT('."'$mod-'".', id) AS modid, '.$field.' AS modtime';
+        $select = $DB->sql_concat("'$mod-'", 'id');
+        $select = "$select AS modid, $field AS modtime";
         $from = '{'.$mod.'}';
-        $where = 'course = ? AND '.$field.' IS NOT NULL AND '.$field.' > ?';
+        $where = "course = ? AND $field IS NOT NULL AND $field > ?";
         $sql[$mod] = "SELECT $select FROM $from WHERE $where";
         $params[] = $courseid;
         $params[] = 0;

@@ -2,6 +2,9 @@
 Change log for block_taskchain_navigation
 ========================================
 
+2025-02-05 (46)
+ - add mod_vocab to list of modules whose dates can be modified by the accesscontrol.php script
+
 2024-12-10 (45)
  - fix name of time fields in mod_reader
 

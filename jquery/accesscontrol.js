@@ -78,6 +78,11 @@ $(document).ready(function(){
                 var src = "t/switch_plus";
             }
             img.src = helpiconurl.replace('help', src);
+            img.classList.add("icon");
+
+            // Add CSS styles to restict width, height and font-size to 16px.
+            this.classList.add('icon-size-3');
+            img.classList.add('icon');
 
             // add IMG click event handler
             $(img).click(function(evt){

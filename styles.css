@@ -599,6 +599,10 @@ table.selectedactivitylist span.failure {
     margin-top:    0px;
 }
 
+.blockconfigtable td.itemvalue label span.modnames:first-child {
+    margin-left:   0px;
+}
+
 .blockconfigtable td.itemname .allornone {
     font-size:    0.75em;
     margin-right: 0.75em;

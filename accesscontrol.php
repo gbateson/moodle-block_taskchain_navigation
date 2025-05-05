@@ -747,7 +747,7 @@ function taskchain_navigation_accesscontrol_form($course, $block_instance, $acti
                              'background-position: 1px 2px; '.
                              'background-size: 1em; '. // 16px
                              'min-height: 20px; '.
-                             'padding-left: 12px;"';
+                             'padding-left: 18px;"';
             $name = urldecode($cm->name);
             $name = block_taskchain_navigation::filter_text($name);
             $name = trim(strip_tags($name));
@@ -2688,7 +2688,11 @@ function taskchain_navigation_accesscontrol_form($course, $block_instance, $acti
         print_sectionheading(get_string('fileuploads', 'install'), 'files', true);
 
         $href = 'http://php.net/manual/'.substr(current_language(), 0, 2).'/ini.core.php';
-        $icon = html_writer::empty_tag('img', array('src' => $PAGE->theme->$image_url('i/info', ''), 'title' => get_string('info')));
+        $icon = html_writer::empty_tag('img', array(
+            'src' => $PAGE->theme->$image_url('i/info', ''),
+            'title' => get_string('info'),
+            'class' => 'icon'
+        ));
         $params = array('onclick' => 'this.target="_blank"');
 
         echo '<tr>'."\n";
@@ -2723,7 +2727,11 @@ function taskchain_navigation_accesscontrol_form($course, $block_instance, $acti
         echo html_writer::tag('span', $limit, array('class' => 'uploadlimit'));
         if (has_capability('moodle/course:update', $sitecontext)) {
             $href = new moodle_url('/admin/settings.php', array('section' => 'sitepolicies'));
-            $icon = html_writer::empty_tag('img', array('src' => $PAGE->theme->$image_url('i/settings', ''), 'title' => get_string('update')));
+            $icon = html_writer::empty_tag('img', array(
+                'src' => $PAGE->theme->$image_url('i/settings', ''),
+                'title' => get_string('update'),
+                'class' => 'icon'
+            ));
             echo html_writer::link($href, $icon, array('onclick' => 'this.target="_blank"'));
         }
         echo '</td>'."\n";
@@ -2743,7 +2751,11 @@ function taskchain_navigation_accesscontrol_form($course, $block_instance, $acti
         echo html_writer::tag('span', $limit, array('class' => 'uploadlimit'));
         if (has_capability('moodle/course:update', $course->context)) {
             $href = new moodle_url('/course/edit.php', array('id' => $course->id));
-            $icon = html_writer::empty_tag('img', array('src' => $PAGE->theme->$image_url('i/settings', ''), 'title' => get_string('update')));
+            $icon = html_writer::empty_tag('img', array(
+                'src' => $PAGE->theme->$image_url('i/settings', ''),
+                'title' => get_string('update'),
+                'class' => 'icon'
+            ));
             echo html_writer::link($href, $icon, array('onclick' => 'this.target="_blank"'));
         }
         echo '</td>'."\n";
@@ -2770,7 +2782,11 @@ function taskchain_navigation_accesscontrol_form($course, $block_instance, $acti
                     $href = 'modsetting'.$name;
                 }
                 $href = new moodle_url('/admin/settings.php', array('section' => $href));
-                $icon = html_writer::empty_tag('img', array('src' => $PAGE->theme->$image_url('i/settings', ''), 'title' => get_string('update')));
+                $icon = html_writer::empty_tag('img', array(
+                    'src' => $PAGE->theme->$image_url('i/settings', ''),
+                    'title' => get_string('update'),
+                    'class' => 'icon'
+                ));
                 echo html_writer::link($href, $icon, array('onclick' => 'this.target="_blank"'));
             }
             echo html_writer::empty_tag('br');
@@ -3738,7 +3754,7 @@ function require_head_js() {
 function print_sectionheading($text, $sectionname, $expandable) {
     echo '<tr class="sectionheading" id="id_section_'.$sectionname.'">'."\n";
     if ($expandable) {
-        echo '<th colspan="2">'.$text.'</th><th class="toggle"></th>'."\n";
+        echo '<th colspan="2">'.$text.'</th><th></th>'."\n";
     } else {
         echo '<th colspan="3">'.$text.'</th>'."\n";
     }
@@ -4467,14 +4483,15 @@ function get_completionfield($strman, $plugin, $modname, $name, $value, $fields)
 
         case ($name=='completionview'):
             $cmfield = true;
-            if ($strman->string_exists('completion_automatic', 'completion')) {
+            if ($strman->string_deprecated($name, 'completion')) {
                 // Moodle >= 4.3
-                $text = get_string('completionview', $plugin);
+                $text = get_string($name.'_desc', 'completion');
+                $desc = '';
             } else {
                 // Moodle <= 4.2
-                $text = get_string('completionview', 'completion');
+                $text = get_string($name, 'completion');
+                $desc = get_string($name.'_desc', 'completion');
             }
-            $desc = get_string('completionview_desc', 'completion');
             $type = 'checkbox';
             break;
 
@@ -4485,18 +4502,19 @@ function get_completionfield($strman, $plugin, $modname, $name, $value, $fields)
             $type = 'checkbox';
             break;
 
-        case ($modname=='forum'):
-            // fields: discussions, replies, posts
-            $text = get_string($name.'group', $modname);
-            $desc = get_string($name, $modname);
-            $type = 'textbox';
-            break;
-
-        case ($modname=='glossary'):
-            // fields: entries
-            $text = get_string($name.'group', $modname);
-            $desc = get_string($name, $modname);
-            $type = 'textbox';
+        case ($modname=='forum'): // fields: discussions, replies, posts
+        case ($modname=='glossary'): // fields: entries
+            if ($strman->string_deprecated($name.'group', $modname)) {
+                // Moodle >= 4.3.
+                $text = get_string($name, $modname);
+                $desc = '';
+                $type = 'checkbox';
+            } else {
+                // Moodle <= 4.2.
+                $text = get_string($name.'group', $modname);
+                $desc = get_string($name, $modname);
+                $type = 'textbox';
+            }
             break;
 
         case ($modname=='lesson'):

@@ -3754,7 +3754,7 @@ function require_head_js() {
 function print_sectionheading($text, $sectionname, $expandable) {
     echo '<tr class="sectionheading" id="id_section_'.$sectionname.'">'."\n";
     if ($expandable) {
-        echo '<th colspan="2">'.$text.'</th><th></th>'."\n";
+        echo '<th colspan="2">'.$text.'</th><th class="toggle"></th>'."\n";
     } else {
         echo '<th colspan="3">'.$text.'</th>'."\n";
     }

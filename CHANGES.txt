@@ -2,6 +2,9 @@
 Change log for block_taskchain_navigation
 ========================================
 
+2025-05-06 (50)
+ - detect, and avoid, use of missing completion strings
+
 2025-05-06 (48)
  - fix missing completion strings in Moodle >= 4.3
 

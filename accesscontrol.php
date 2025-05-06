@@ -4483,14 +4483,15 @@ function get_completionfield($strman, $plugin, $modname, $name, $value, $fields)
 
         case ($name=='completionview'):
             $cmfield = true;
-            if ($strman->string_deprecated($name, 'completion')) {
-                // Moodle >= 4.3
-                $text = get_string($name.'_desc', 'completion');
-                $desc = '';
-            } else {
+            if (string_available($strman, $name, 'completion')) {
                 // Moodle <= 4.2
                 $text = get_string($name, 'completion');
                 $desc = get_string($name.'_desc', 'completion');
+            } else {
+                // Moodle >= 4.3 string deprecated.
+                // Moodle >= 5.x string removed.
+                $text = get_string($name.'_desc', 'completion');
+                $desc = '';
             }
             $type = 'checkbox';
             break;
@@ -4504,16 +4505,17 @@ function get_completionfield($strman, $plugin, $modname, $name, $value, $fields)
 
         case ($modname=='forum'): // fields: discussions, replies, posts
         case ($modname=='glossary'): // fields: entries
-            if ($strman->string_deprecated($name.'group', $modname)) {
-                // Moodle >= 4.3.
-                $text = get_string($name, $modname);
-                $desc = '';
-                $type = 'checkbox';
-            } else {
-                // Moodle <= 4.2.
+            if (string_available($strman, $name.'group', $modname)) {
+                // Moodle <= 4.2
                 $text = get_string($name.'group', $modname);
                 $desc = get_string($name, $modname);
                 $type = 'textbox';
+            } else {
+                // Moodle >= 4.3 string deprecated.
+                // Moodle >= 5.x string removed.
+                $text = get_string($name, $modname);
+                $desc = '';
+                $type = 'checkbox';
             }
             break;
 
@@ -4671,6 +4673,19 @@ function get_completionfield($strman, $plugin, $modname, $name, $value, $fields)
         'options' => $options,
         'cmfield' => $cmfield
     );
+}
+
+function string_available($strman, $strname, $component) {
+    if ($strman->string_exists($strname, $component)) {
+        if ($strman->string_deprecated($strname, $component)) {
+            // String has been deprecated.
+            return false;
+        }
+        // String exists and has not been deprecated ... yet.
+        return true;
+    }
+    // String does not exist (any more).
+    return false;
 }
 
 function get_duration_units($unit=null) {

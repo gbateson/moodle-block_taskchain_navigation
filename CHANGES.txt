@@ -2,6 +2,9 @@
 Change log for block_taskchain_navigation
 ========================================
 
+2025-09-09 (51)
+ - add groupings to group menu
+
 2025-05-06 (50)
  - detect, and avoid, use of missing completion strings
 

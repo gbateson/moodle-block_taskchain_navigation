@@ -44,12 +44,15 @@ class block_taskchain_navigation extends block_base {
     /** the current group id */
     protected $groupid = null;
 
+    /** the current grouping id */
+    protected $groupingid = null;
+
     /**
-     * init
+     * Initialize the title, groupid and groupingid.
      */
     function init() {
         $this->title = get_string('blockname', 'block_taskchain_navigation');
-        $this->get_groupid();
+        list($groupid, $groupingid) = $this->get_groupid();
     }
 
     /**
@@ -2389,7 +2392,7 @@ class block_taskchain_navigation extends block_base {
             $groupby = 'GROUP BY itemid';
 
             // get active groupid for this course during this $SESSION
-            $groupid = $this->get_groupid();
+            list($groupid, $groupingid) = $this->get_groupid();
 
             // get groupmode: 0=NOGROUPS, 1=VISIBLEGROUPS, 2=SEPARATEGROUPS
             $groupmode = groups_get_course_groupmode($COURSE);
@@ -2403,11 +2406,13 @@ class block_taskchain_navigation extends block_base {
                 $mygroupsonly = true;
             }
 
-            if ($mygroupsonly || $groupid) {
+            if ($mygroupsonly || $groupid || $groupingid) {
                 // select only users from specific group(s) in this course
                 $groupids = "SELECT id FROM {$CFG->prefix}groups WHERE courseid=$COURSE->id";
                 if ($groupid) {
-                    $groupids .= " AND id=$groupid";
+                    $groupids .= " AND id =$groupid";
+                } else if ($groupingid) {
+                    $groupids .= " AND id IN (SELECT groupid FROM {$CFG->prefix}groupings_groups WHERE groupingid = $groupingid)";
                 }
                 if ($mygroupsonly) {
                     $groupids = "SELECT groupid FROM {$CFG->prefix}groups_members WHERE userid=$USER->id AND groupid IN ($groupids)";
@@ -2777,7 +2782,7 @@ class block_taskchain_navigation extends block_base {
     }
 
     /**
-     * get_group_menu
+     *
      */
     function get_group_menu() {
         global $CFG, $COURSE, $DB, $USER;
@@ -2796,85 +2801,138 @@ class block_taskchain_navigation extends block_base {
 
         $groupmode = groups_get_course_groupmode($COURSE);
 
-        if ($groupmode==NOGROUPS) {
+        if ($groupmode == NOGROUPS) {
             return ''; // no groups in this course
         }
 
-        switch ($this->config->groupssort) {
-            case 3: $sortfield = 'g.timemodified'; break;
-            case 2: $sortfield = 'g.timecreated'; break;
-            case 1: $sortfield = 'g.idnumber'; break;
-            case 0: // this is the default value
-            default: $sortfield = 'g.name';
+        // Get all groupings and groups for this course.
+        $gdata = groups_get_course_data($COURSE->id);
+
+        // Map: group_id => count of groupings it belongs to.
+        $groupids = [];
+        if (isset($gdata->groups)) {
+            $groupids = array_fill_keys(array_keys($gdata->groups), 0);
         }
 
-        $select = 'g.id, g.name';
-        if (strpos($select, $sortfield)===false) {
-            $select .= ", $sortfield";
-        }
-        $from   = "{$CFG->prefix}groups g";
-        if ($this->config->groupscountusers) {
-            $select .= ', COUNT(gm.userid) AS countusers';
-            $from   .= " JOIN {$CFG->prefix}groups_members gm ON g.id = gm.groupid";
+        // Map: grouping_id => array of group_ids in that grouping.
+        $groupingids = [];
+        if (isset($gdata->groupings)) {
+            $groupingids = array_fill_keys(array_keys($gdata->groupings), []);
         }
 
-        if ($groupmode==VISIBLEGROUPS || has_capability('moodle/site:accessallgroups', $COURSE->context)) {
-            $where = 'g.courseid = '.$COURSE->id;
+        // Build membership & counts.
+        if (isset($gdata->mappings)) {
+            foreach ($gdata->mappings as $mapping) {
+                $groupid = (int)$mapping->groupid;
+                $groupingid = (int)$mapping->groupingid;
+
+                // Increment how many groupings this group belongs to.
+                if (! isset($groupids[$groupid])) {
+                    $groupids[$groupid] = 0; // safety, in case of odd data
+                }
+                $groupids[$groupid]++;
+
+                // Add this group to its parent grouping list.
+                if (! isset($groupingids[$groupingid])) {
+                    $groupingids[$groupingid] = []; // safety
+                }
+                $groupingids[$groupingid][] = $groupid;
+            }
+        }
+
+        // Detect any groups that are not in any grouping (shouldn't be any).
+        $groupingids[0] = array_keys(array_filter($groupids, function ($count) {
+            return ($count === 0);
+        }));
+        unset($groupids); // No longer needed.
+
+        // Remove all empty groupings (those with no member groups).
+        $groupingids = array_filter($groupingids, function ($groupids) {
+            return (count($groupids));
+        });
+
+        // If there is only one grouping, we don't show groupnames.
+        if (count($groupingids) <= 1) {
+            $showgroupingname = false;
         } else {
-            $groupids = "SELECT id FROM {$CFG->prefix}groups WHERE courseid=$COURSE->id";
-            $groupids = "SELECT groupid FROM {$CFG->prefix}groups_members WHERE userid=$USER->id AND groupid IN ($groupids)";
-            $where = "groupid IN ($groupids)";
+            $showgroupingname = true;
         }
 
-        // get list of groups
-        $groups = $DB->get_records_sql("SELECT $select FROM $from WHERE $where GROUP BY g.id ORDER BY $sortfield");
+        $menu = '';
+        list($targetgroupid, $targetgroupingid) = $this->get_groupid();
 
-        if (empty($groups)) {
-            return ''; // no groups found for this course ?!
-        }
+        foreach ($groupingids as $groupingid => $groupids) {
 
-        // get active groupid for this course during this $SESSION
-        $groupid = $this->get_groupid();
-
-        $href = new moodle_url('/course/view.php', array('id' => $COURSE->id));
-        if ($section = optional_param('section', 0, PARAM_INT)) {
-            $href->param('section', $section);
-        }
-        $menu = '<form class="group_form" method="post" action="'.$href.'"><div>';
-
-        if ($this->config->groupslabel) {
-            $menu .= get_string('group').': ';
-        }
-
-        $menu .= '<select id="id_group" name="group" onchange="this.form.submit()">';
-
-        if (count($groups) > 1) {
-            $menu .= '<option value="0">'.get_string('allgroups').'</option>';
-        }
-
-        foreach ($groups as $group) {
-            if ($group->id==$groupid) {
-                $selected = ' selected="selected"';
-            } else {
-                $selected = '';
+            if ($showgroupingname) {
+                $name = $gdata->groupings[$groupingid]->name;
+                $params = ['value' => -$groupingid, 'class' => 'text-bold'];
+                if ($groupingid == $targetgroupingid) {
+                    $params['selected'] = 'selected';
+                }
+                $menu .= \html_writer::tag('option', $name, $params);
             }
-            if ($this->config->groupscountusers) {
-                $group->name .= " ($group->countusers)";
+            $lastgroupid = end($groupids);
+
+            foreach ($groupids as $groupid) {
+                $name = $gdata->groups[$groupid]->name;
+                if ($showgroupingname) {
+                    if ($groupid == $lastgroupid) {
+                        $name = '└ '.$name;
+                    } else {
+                        $name = '├ '.$name;
+                    }
+                }
+                $params = ['value' => $groupid];
+                if ($groupid == $targetgroupid) {
+                    $params['selected'] = 'selected';
+                }
+                $menu .= \html_writer::tag('option', $name, $params);
             }
-            $menu .= '<option value="'.$group->id.'"'.$selected.'>'.$group->name.'</option>';
         }
-        $menu .= '</select>';
 
-        $menu .= '<input id="id_groupsubmit" class="submitbutton" type="submit" value="'.get_string('go').'" />';
-        $menu .= ''
-            .'<script type="text/javascript">'."\n"
-            .'//<![CDATA['."\n"
-            .'document.getElementById("id_groupsubmit").style.display = "none";'."\n"
-            .'//]]>'."\n"
-            .'</script>'."\n"
-        ;
+        if ($menu) {
+            // Enclose the menu options in a SELECT element.
+            $params = [
+                'name' => 'groupmenu',
+                'id' => 'id_groupmenu',
+                'onchange' => 'this.form.submit();'
+            ];
+            $menu = \html_writer::tag('select', $menu, $params);
 
-        $menu .= '</div></form>';
+            // Prepend the Group label, if required.
+            if ($this->config->groupslabel) {
+                $menu = get_string('group').': '.$menu;
+            }
+
+            // Append a "Go" button.
+            $params = [
+                'id' => 'id_groupsubmit',
+                'class' => 'submitbutton',
+                'type' => 'submit',
+                'value' => get_string('go'),
+            ];
+            $menu .= \html_writer::empty_tag('input', $params);
+
+            // Hide Go button if JS is available.
+            $menu .= ''
+                .'<script type="text/javascript">'."\n"
+                .'//<![CDATA['."\n"
+                .'document.getElementById("id_groupsubmit").style.display = "none";'."\n"
+                .'//]]>'."\n"
+                .'</script>'."\n"
+            ;
+
+            // Enclose the menu in a DIV element.
+            $menu = \html_writer::tag('div', $menu);
+
+            // Enclose the DIV element in a FORM element.
+            $url = new moodle_url('/course/view.php', array('id' => $COURSE->id));
+            if ($section = optional_param('section', 0, PARAM_INT)) {
+                $url->param('section', $section);
+            }
+            $params = ['class' => 'groupmenu', 'method' => 'post', 'action' => "$url"];
+            $menu = \html_writer::tag('form', $menu, $params);
+        }
 
         return $menu;
     }
@@ -2903,7 +2961,7 @@ class block_taskchain_navigation extends block_base {
         $orderby  = 'firstname, lastname';
 
         // get active groupid for this course during this $SESSION
-        $groupid = $this->get_groupid();
+        list($groupid, $groupingid) = $this->get_groupid();
 
         // get groupmode: 0=NOGROUPS, 1=VISIBLEGROUPS, 2=SEPARATEGROUPS
         $groupmode = groups_get_course_groupmode($COURSE);
@@ -2994,65 +3052,82 @@ class block_taskchain_navigation extends block_base {
     }
 
     /**
-     * set active groupid for this course during this $SESSION
+     * Set (and cache) the active group ID and grouping ID for this course
+     * during the current $SESSION, based on capabilities, request params,
+     * and prior user/session preferences.
+     *
+     * Uses $COURSE->groupmode and the user's capabilities to determine
+     * which group(s) are visible/accessible, reads any incoming form values
+     * (groupmenu / group), validates them, and then caches the resolved IDs
+     * in both $SESSION and user preferences.
+     *
+     * Globals:
+     * - $COURSE stdClass Course record (expects ->id, ->groupmode, optionally ->context)
+     * - $USER stdClass Current user
+     *
+     * Side effects:
+     * - Updates $this->groupid and $this->groupingid
+     * - Persists resolved IDs into $SESSION and user preferences
+     *
+     * @return array{0:int,1:int} Array with two integers: [groupid, groupingid]
      */
     protected function get_groupid() {
-        global $COURSE, $DB, $SESSION, $USER;
-
+        global $COURSE, $USER;
+    
         // if we have already set the groupid,
         // just return it and stop here
         if (isset($this->groupid)) {
-            return $this->groupid;
+            return [$this->groupid, $this->groupingid];
         }
-
+    
         // intialize groupid
         $this->groupid = 0;
-
+        $this->groupingid = 0;
+    
         // if groups are not used in this course,
         // set to groupid to zero and stop here
         if (empty($COURSE->groupmode) || $COURSE->groupmode==NOGROUPS) {
-            return $this->groupid;
+            return [$this->groupid, $this->groupingid];
         }
-
-        // the user_preference that stores the groupid for this course
-        // this is used to maintain the preference between sessions
-        $preferencename = 'taskchain_navigation_groupid_'.$COURSE->id;
-
+    
         // get course context
         if (isset($COURSE->context)) {
             $context = $COURSE->context;
         } else {
             $context = self::context(CONTEXT_COURSE, $COURSE->id);
         }
-
+    
         // get groupmode: 0=NOGROUPS, 1=VISIBLEGROUPS, 2=SEPARATEGROUPS
         if (has_capability('moodle/site:accessallgroups', $context)) {
             $groupmode = 'aag';
         } else {
             $groupmode = $COURSE->groupmode;
         }
-
-        // get the activegroup for this course
-        // if this is the first time to access $SESSION
-        // we fetch the activegroup from the user preferences
-        if (! isset($SESSION->activegroup)) {
-            $SESSION->activegroup = array();
-        }
-        if (! isset($SESSION->activegroup[$COURSE->id])) {
-            $SESSION->activegroup[$COURSE->id] = array(VISIBLEGROUPS => array(), SEPARATEGROUPS => array(), 'aag' => array());
-        }
-        if (! isset($SESSION->activegroup[$COURSE->id][$groupmode])) {
-             $SESSION->activegroup[$COURSE->id][$groupmode] = array();
-        }
-        if (! isset($SESSION->activegroup[$COURSE->id][$groupmode][$COURSE->defaultgroupingid])) {
-            $groupid = get_user_preferences($preferencename, 0); // first time this $SESSION
-        } else {
-            $groupid = $SESSION->activegroup[$COURSE->id][$groupmode][$COURSE->defaultgroupingid];
-        }
-
-        // override previously set $groupid with incoming form value, if any
+    
+        // Get the active group and grouping for this course.
+        $groupid = self::get_session_value('group', $groupmode);
+        $groupingid = self::get_session_value('grouping', $groupmode);
+    
+        // Override previously set $groupid with incoming form value, if any
         // and then store $groupid locally, if it is valid
+        $groupid = optional_param('groupmenu', $groupid, PARAM_INT);
         if ($groupid = optional_param('group', $groupid, PARAM_INT)) {
+            if ($groupid >= 0) {
+                $groupingid = 0;
+            } else {
+                $groupingid = abs($groupid);
+                $groupings = groups_get_all_groupings($COURSE->id);
+                if (array_key_exists($groupingid, $groupings)) {
+                    $this->groupingid = $groupingid;
+                    $groupid = 0;
+                } else {
+                    $groupingid = 0; // Shouldn't happen !!
+                }
+            }
+        }
+    
+        // If groupid is set, check that it is viewable by the current user.
+        if ($groupid) {
             if ($groupmode==SEPARATEGROUPS) {
                 $groups = groups_get_all_groups($COURSE->id, $USER->id);
             } else {
@@ -3066,14 +3141,92 @@ class block_taskchain_navigation extends block_base {
                 }
             }
         }
-
+    
         // cache $this->groupid for other scripts (via $SESSION)
         // and also later sessions (passing it via user preferences)
-        $SESSION->activegroup[$COURSE->id][$groupmode][$COURSE->defaultgroupingid] = $this->groupid;
-        set_user_preference($preferencename, $this->groupid);
-
-        // return valid groupid
-        return $this->groupid;
+        self::set_session_value('group', $groupmode, $this->groupid);
+        self::set_session_value('grouping', $groupmode, $this->groupingid);
+    
+        // return valid groupid and groupingid.
+        return [$groupid, $groupingid];
+    }
+    
+    /**
+     * Read the active group or grouping ID for the current course and groupmode
+     * from $SESSION if present; otherwise fall back to the stored user preference.
+     *
+     * The value is kept per course and per groupmode (VISIBLEGROUPS, SEPARATEGROUPS, 'aag'),
+     * and additionally keyed by the course default grouping ID to separate contexts.
+     *
+     * Globals:
+     * - $COURSE stdClass  Course record (expects ->id, ->defaultgroupingid)
+     * - $SESSION stdClass PHP session storage object
+     *
+     * @param string $name Either 'group' or 'grouping' (determines which value is read)
+     * @param int|string $groupmode Course group mode (NOGROUPS|VISIBLEGROUPS|SEPARATEGROUPS) or 'aag' for access-all-groups
+     * @return int The active group ID or grouping ID (0 if none)
+     */
+    public static function get_session_value($name, $groupmode) {
+        global $COURSE, $SESSION;
+    
+        $active = 'active'.$name; // e.g. "activegroup"
+        $courseid = $COURSE->id;
+        $defaultid = $COURSE->defaultgroupingid;
+    
+        // the user_preference that stores the groupid for this course
+        // this is used to maintain the preference between sessions
+        $preferencename = 'taskchain_navigation_'.$name.'id_'.$courseid;
+    
+        if (! isset($SESSION->$active)) {
+            $SESSION->$active = array();
+        }
+        if (! isset($SESSION->$active[$courseid])) {
+            $SESSION->$active[$courseid] = array(
+                VISIBLEGROUPS => array(),
+                SEPARATEGROUPS => array(),
+                'aag' => array()
+            );
+        }
+        if (! isset($SESSION->$active[$courseid][$groupmode])) {
+             $SESSION->$active[$courseid][$groupmode] = array();
+        }
+        if (isset($SESSION->$active[$courseid][$groupmode][$defaultid])) {
+            return $SESSION->$active[$courseid][$groupmode][$defaultid];
+        } else {
+            return get_user_preferences($preferencename, 0); // first time this $SESSION
+        }
+    }
+    
+    /**
+     * Persist the active group or grouping ID for the current course and groupmode
+     * into $SESSION and also into user preferences for cross-session continuity.
+     *
+     * Values are stored per course and per groupmode (VISIBLEGROUPS, SEPARATEGROUPS, 'aag'),
+     * additionally keyed by the course default grouping ID.
+     *
+     * Globals:
+     * - $COURSE stdClass  Course record (expects ->id, ->defaultgroupingid)
+     * - $SESSION stdClass PHP session storage object
+     *
+     * Side effects:
+     * - Mutates $SESSION
+     * - Calls set_user_preference() to persist the value per user
+     *
+     * @param string            $name      Either 'group' or 'grouping' (determines which value is written)
+     * @param int|string        $groupmode Course group mode (NOGROUPS|VISIBLEGROUPS|SEPARATEGROUPS) or 'aag' for access-all-groups
+     * @param int               $value     The group ID or grouping ID to store (0 if none)
+     * @return void
+     */
+    public static function set_session_value($name, $groupmode, $value) {
+        global $COURSE, $SESSION;
+    
+        $active = 'active'.$name; // e.g. "activegroup"
+        $courseid = $COURSE->id;
+        $defaultid = $COURSE->defaultgroupingid; // Should this be groupingid?
+        $SESSION->$active[$courseid][$groupmode][$defaultid] = $value;
+    
+        $preferencename = 'taskchain_navigation_'.$name.'id_'.$courseid;
+        set_user_preference($preferencename, $value);
     }
 
     /**

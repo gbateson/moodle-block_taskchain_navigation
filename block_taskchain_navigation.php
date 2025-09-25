@@ -17,11 +17,11 @@
 /**
  * blocks/taskchain_navigation/block_taskchain_navigation.php
  *
- * @package    blocks
+ * @package blocks
  * @subpackage taskchain_navigation
- * @copyright  2014 Gordon Bateson (gordon.bateson@gmail.com)
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @since      Moodle 2.0
+ * @copyright 2014 Gordon Bateson (gordon.bateson@gmail.com)
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @since Moodle 2.0
  */
 
 /** Prevent direct access to this script */
@@ -34,10 +34,10 @@ require_once($CFG->dirroot.'/lib/gradelib.php');
 /**
  * class: block_taskchain_navigation
  *
- * @package    blocks
+ * @package blocks
  * @subpackage taskchain_navigation
  * @copyright 2014 Gordon Bateson <gordon.bateson@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class block_taskchain_navigation extends block_base {
 
@@ -187,7 +187,7 @@ class block_taskchain_navigation extends block_base {
 
         // Fix problems with incomplete object, caused by class not existing before unserialize.
         // "The script tried to execute a method or access a property of an incomplete object."
-        if (get_class($this->config)=='__PHP_Incomplete_Class') {
+        if (get_class($this->config) == '__PHP_Incomplete_Class') {
             $this->config = get_object_vars($this->config);
             $this->config = (object)$this->config;
             unset($this->config->__PHP_Incomplete_Class_Name);
@@ -219,14 +219,14 @@ class block_taskchain_navigation extends block_base {
                 // Moodle >= 2.3
                 $name = get_class($this).'_course'.$COURSE->id;
                 $displaysection = get_user_preferences($name, 0);
-                if ($displaysection==$section) {
+                if ($displaysection == $section) {
                     // do nothing
                 } else {
                     $displaysection = $section;
                     $update = true;
                 }
             }
-            if ($displaysection==0) {
+            if ($displaysection == 0) {
                 // no course section is currently selected for this user
                 if ($displaysection = $this->config->defaultsection) {
                     // use default display section
@@ -259,7 +259,7 @@ class block_taskchain_navigation extends block_base {
         }
 
         // disable hiddensections functionality, if the block is in the right column
-        if (isset($this->instance->region) && $this->instance->region==BLOCK_POS_RIGHT) {
+        if (isset($this->instance->region) && $this->instance->region == BLOCK_POS_RIGHT) {
             $this->config->hiddensections = 0;
         }
 
@@ -300,11 +300,11 @@ class block_taskchain_navigation extends block_base {
                 $data->$name = array();
                 break;
 
-            case ($data->$name=='all'):
+            case ($data->$name == 'all'):
                 $data->$name = array('all');
                 break;
 
-            case ($data->$name=='specific'):
+            case ($data->$name == 'specific'):
                 if (empty($data->$types)) {
                     $data->$name = array();
                 } else {
@@ -411,7 +411,7 @@ class block_taskchain_navigation extends block_base {
 
         $vars = get_object_vars($data);
         foreach ($vars as $name => $value) {
-            if ($name=='mycourses') {
+            if ($name == 'mycourses') {
                 $contextids = $value;
                 unset($data->$name);
                 continue; // field is special
@@ -457,7 +457,7 @@ class block_taskchain_navigation extends block_base {
             }
         }
 
-        //  save config settings as usual
+        // Save config settings as usual.
         return parent::instance_config_save($data, $pinned);
     }
 
@@ -498,17 +498,17 @@ class block_taskchain_navigation extends block_base {
             case 2: // show if activity or resource
             case 3: // show if activity or resource or label
                 foreach ($modinfo->sections as $sectionnum => $cmids) {
-                    if ($sectionnum==0) {
+                    if ($sectionnum == 0) {
                         continue; // skip section 0
                     }
                     foreach ($cmids as $cmid) {
                         if (empty($modinfo->cms[$cmid])) {
                             continue; // shouldn't happen
                         }
-                        if ($this->config->sectionshowungraded <= 2 && $modinfo->cms[$cmid]->modname=='label') {
+                        if ($this->config->sectionshowungraded <= 2 && $modinfo->cms[$cmid]->modname == 'label') {
                             continue;
                         }
-                        if ($this->config->sectionshowungraded <= 1 && $modinfo->cms[$cmid]->modname=='resource') {
+                        if ($this->config->sectionshowungraded <= 1 && $modinfo->cms[$cmid]->modname == 'resource') {
                             continue;
                         }
                         $sectionnums[$sectionnum] = false; // $modinfo->cms[$cmid]->uservisible
@@ -546,10 +546,10 @@ class block_taskchain_navigation extends block_base {
                         $graded = true;
                         $visible = true;
                         if ($this->is_zeroweighted($items[$id])) {
-                            if ($this->config->sectionshowzeroweighted==0) { // hide
+                            if ($this->config->sectionshowzeroweighted == 0) { // hide
                                 $visible = false;
                             }
-                            if ($this->config->sectionshowzeroweighted==2) { // merge
+                            if ($this->config->sectionshowzeroweighted == 2) { // merge
                                 $graded = false;
                             }
                         }
@@ -569,7 +569,7 @@ class block_taskchain_navigation extends block_base {
 
         // transfer ungraded sections to a seperate "ungraded" $item
         foreach ($sectionnums as $sectionnum => $graded) {
-            if ($graded==false) {
+            if ($graded == false) {
                 $items[$ungradedid]->sectionnums[$sectionnum] = $graded;
             }
         }
@@ -657,8 +657,8 @@ class block_taskchain_navigation extends block_base {
                         if ($this->config->categoryskipzeroweighted) {
                             // skip this category if the parent is "weighted mean of grades"
                             // and this category has a weighting of zero
-                            if ($items[$parentid]->aggregation==GRADE_AGGREGATE_WEIGHTED_MEAN) {
-                                if ($weighting==0.0) {
+                            if ($items[$parentid]->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN) {
+                                if ($weighting == 0.0) {
                                     $show_category = false;
                                     $move_category = false;
                                     $move_sections = false;
@@ -668,7 +668,7 @@ class block_taskchain_navigation extends block_base {
 
                         if ($this->config->categoryshowweighting && $show_category) {
                             $items[$id]->fullname = preg_replace('/\s*[0-9]+%$/', '', $items[$id]->fullname);
-                            if ($items[$parentid]->aggregation==GRADE_AGGREGATE_WEIGHTED_MEAN) {
+                            if ($items[$parentid]->aggregation == GRADE_AGGREGATE_WEIGHTED_MEAN) {
                                 $items[$id]->fullname .= ' '.$this->fix_precision($weighting).'%';
                             }
                         }
@@ -704,7 +704,7 @@ class block_taskchain_navigation extends block_base {
 
 
                         // transfer section nums to parent grade category
-                        if ($move_category==false && $show_category==false && $move_sections) {
+                        if ($move_category == false && $show_category==false && $move_sections) {
                             if ($this->config->sectionshowburied) {
                                 if (isset($items[$id]->sectionnums)) {
                                     if (empty($items[$parentid]->sectionnums)) {
@@ -718,7 +718,7 @@ class block_taskchain_navigation extends block_base {
                         }
 
                         // remove $item, if it is no longer required
-                        if ($move_category || $show_category==false) {
+                        if ($move_category || $show_category == false) {
                             unset($items[$id]);
                         }
 
@@ -734,7 +734,7 @@ class block_taskchain_navigation extends block_base {
 
                         $sectionnum = $items[$id]->sectionnum;
 
-                        // make sure we have a required section and  parent grade cateogry
+                        // make sure we have a required section and parent grade cateogry
                         if (empty($sectioninfo[$sectionnum])) {
                             $parentid = 0;
                         } else {
@@ -747,10 +747,10 @@ class block_taskchain_navigation extends block_base {
 
                             // handle "zero-weighted" sections
                             if ($this->is_zeroweighted($items[$id])) {
-                                if ($this->config->sectionshowzeroweighted==0) { // hide
+                                if ($this->config->sectionshowzeroweighted == 0) { // hide
                                     $visible = false;
                                 }
-                                if ($this->config->sectionshowzeroweighted==2) { // merge
+                                if ($this->config->sectionshowzeroweighted == 2) { // merge
                                     $parentid = $ungradedid;
                                 }
                             }
@@ -809,7 +809,7 @@ class block_taskchain_navigation extends block_base {
      * @return xxx true if $record is zero-weighted, false otherwise
      */
     function is_zeroweighted($record) {
-        if ($record->grademax==0.0) {
+        if ($record->grademax == 0.0) {
             return true;
         }
         if ($this->is_extracredit($record)) {
@@ -951,7 +951,7 @@ class block_taskchain_navigation extends block_base {
      * @return boolean
      */
     function is_sibling_gradeitem($record, $itemtype, $parentgradecategoryid) {
-        if ($record->itemtype==$itemtype && $record->parentgradecategoryid==$parentgradecategoryid) {
+        if ($record->itemtype == $itemtype && $record->parentgradecategoryid==$parentgradecategoryid) {
             if ($this->is_extracredit($record)) {
                 return false;
             }
@@ -1139,7 +1139,7 @@ class block_taskchain_navigation extends block_base {
     function get_js_addstyles() {
         $js = '';
 
-        if ($this->config->moodlecss==1) { // 1=simple view, 2=user report
+        if ($this->config->moodlecss == 1) { // 1=simple view, 2=user report
             //$href = new moodle_url('/grade/edit/tree/tree.css');
             //$js .= ''
             //    ."    var obj = document.createElement('link');\n"
@@ -1358,8 +1358,8 @@ class block_taskchain_navigation extends block_base {
                     ."            case 'checkbox':\n"
                     ."            case 'radio':\n"
                     ."                var ii = parseInt(obj[i].name.substr(14));\n"
-                    ."                if (typeof(hiddensections)=='string') {\n"
-                    ."                    obj[i].checked = (hiddensections=='all' ? true : false);\n"
+                    ."                if (typeof(hiddensections) == 'string') {\n"
+                    ."                    obj[i].checked = (hiddensections == 'all' ? true : false);\n"
                     ."                } else {\n"
                     ."                    obj[i].checked = (hiddensections[ii] ? true : false);\n"
                     ."                }\n"
@@ -1367,8 +1367,8 @@ class block_taskchain_navigation extends block_base {
                     ."            case 'select':\n"
                     ."            case 'select-multiple':\n"
                     ."                for (var ii=0; ii<obj[i].options.length; ii++) {\n"
-                    ."                    if (typeof(hiddensections)=='string') {\n"
-                    ."                        obj[i].options[ii].selected = (hiddensections=='all' ? true : false);\n"
+                    ."                    if (typeof(hiddensections) == 'string') {\n"
+                    ."                        obj[i].options[ii].selected = (hiddensections == 'all' ? true : false);\n"
                     ."                    } else {\n"
                     ."                        obj[i].options[ii].selected = (hiddensections[ii+1] ? true : false);\n"
                     ."                    }\n"
@@ -1380,7 +1380,7 @@ class block_taskchain_navigation extends block_base {
                     ."//]]>\n"
                     ."</script>\n"
                 ;
-                if ($this->config->hiddensectionsstyle==0) {
+                if ($this->config->hiddensectionsstyle == 0) {
                     // Note: $tagname needs to be uppercase
                     $tagname = 'INPUT'; // checkbox or radio
                 } else {
@@ -1392,7 +1392,7 @@ class block_taskchain_navigation extends block_base {
                 $hide_all = true;
                 $show_all = true;
                 foreach ($sections as $sectionnum => $section) {
-                    if ($sectionnum==0) {
+                    if ($sectionnum == 0) {
                         continue;
                     }
                     if ($sectionnum > $this->config->numsections) {
@@ -1404,7 +1404,7 @@ class block_taskchain_navigation extends block_base {
                         $hide_all = false;
                     } else {
                         $class = ' class="hiddensection"';
-                        if ($this->config->hiddensectionsstyle==0) {
+                        if ($this->config->hiddensectionsstyle == 0) {
                             $selected = ' checked="checked"';
                         } else {
                             $selected = ' selected="selected"';
@@ -1413,7 +1413,7 @@ class block_taskchain_navigation extends block_base {
                         $reset[] = $sectionnum;
                     }
                     // hiddensectionstitle: 0=number, 1=text, 2=number and text
-                    if ($this->config->hiddensectionstitle==0) {
+                    if ($this->config->hiddensectionstitle == 0) {
                         $tag = 'span';
                         $style = ' style="white-space: nowrap;"';
                         $text2 = '';
@@ -1427,22 +1427,22 @@ class block_taskchain_navigation extends block_base {
                         $text2 = $this->trim_name($text2);
                         $style = '';
                     }
-                    if ($this->config->hiddensectionstitle==0 || $this->config->hiddensectionstitle==2) {
+                    if ($this->config->hiddensectionstitle == 0 || $this->config->hiddensectionstitle==2) {
                         $text1 = $sectionnum;
                     } else {
                         $text1 = '';
                     }
                     // hiddensectionsstyle: 0=checkboxes, 1=multi-select menu
-                    if ($this->config->hiddensectionsstyle==0) {
+                    if ($this->config->hiddensectionsstyle == 0) {
                         $content .= ' <'.$tag.$style.'>'.$text1.'<input type="checkbox" name="hiddensection['.$sectionnum.']" value="'.$sectionnum.'"'.$selected.$class.' />'.$text2.'</'.$tag.'>';
                     } else {
-                        if ($this->config->hiddensectionstitle==2) {
+                        if ($this->config->hiddensectionstitle == 2) {
                             $text1 .= '. ';
                         }
                         $content .= '<option value="'.$sectionnum.'"'.$selected.$class.'>'.$text1.$text2.'</option>';
                     }
                 }
-                if ($this->config->hiddensectionsstyle==1) {
+                if ($this->config->hiddensectionsstyle == 1) {
                     $content .= '</select>';
                 }
                 if ($hide_all || $show_all) {
@@ -1479,7 +1479,7 @@ class block_taskchain_navigation extends block_base {
             if ($this->config->currentsection) {
                 $content = '';
                 for ($sectionnum=0; $sectionnum<=$this->config->numsections; $sectionnum++) {
-                    if ($sectionnum==$COURSE->marker) {
+                    if ($sectionnum == $COURSE->marker) {
                         $class = ' class="currentsection"';
                         $selected = ' selected="selected"';
                     } else {
@@ -1548,7 +1548,7 @@ class block_taskchain_navigation extends block_base {
         $oddrow = true;
         $oddeven = '';
 
-        if ($this->config->moodlecss==2) {
+        if ($this->config->moodlecss == 2) {
             $th = 'td'; // user grade report
         } else {
             $th = 'th'; // simple view
@@ -1556,7 +1556,7 @@ class block_taskchain_navigation extends block_base {
 
         foreach ($records as $record) {
 
-            if ($record->itemtype=='mod') {
+            if ($record->itemtype == 'mod') {
                 continue;
             }
 
@@ -1570,11 +1570,11 @@ class block_taskchain_navigation extends block_base {
 
             $this->content->text .= '<tr'.$this->get_css_class(3, $oddeven, $record).'>'."\n";
 
-            if ($record->itemtype=='course') {
+            if ($record->itemtype == 'course') {
                 $record->rowspan = $courserowspan;
             }
 
-            if ($record->itemtype=='ungraded') {
+            if ($record->itemtype == 'ungraded') {
                 // don't print LH cushion cell
                 unset($record->rowspan);
             } else {
@@ -1591,10 +1591,10 @@ class block_taskchain_navigation extends block_base {
                 }
             }
 
-            if ($record->itemtype=='ungraded') {
+            if ($record->itemtype == 'ungraded') {
                 // the padding, name and score cells will be merged
                 $colspan = $maxdepth + 2;
-            } else if ($record->itemtype=='course' && $this->config->minimumdepth>1) {
+            } else if ($record->itemtype == 'course' && $this->config->minimumdepth>1) {
                 // set colspan for course grade category
                 $colspan = $maxdepth + 1;
             } else {
@@ -1612,21 +1612,21 @@ class block_taskchain_navigation extends block_base {
             $sectionnum = 0;
             $categoryname = '';
             $categoryhref = '';
-            if ($record->itemtype=='ungraded') {
+            if ($record->itemtype == 'ungraded') {
                 // do nothing - i.e. don't show a category name
             } else {
                 $categoryname = $record->fullname;
                 $categoryname = $this->fix_prefix_suffix($categoryname, 'category', $categoryprefixlen, $categorysuffixlen);
 
                 // link grade category to section, if required
-                if ($this->config->categorycollapse && empty($record->subgrades) && isset($record->sectionnums) && count($record->sectionnums)==1) {
+                if ($this->config->categorycollapse && empty($record->subgrades) && isset($record->sectionnums) && count($record->sectionnums) == 1) {
 
                     // $sectionnum is the get first (and only) key in $record->sectionnums
                     $sectionnums = array_keys($record->sectionnums);
                     $sectionnum = array_shift($sectionnums);
 
                     if (isset($sectioninfo[$sectionnum])) {
-                        if ($this->config->categorycollapse==1) {
+                        if ($this->config->categorycollapse == 1) {
                             $categoryname = $this->get_section_text($sectioninfo, $sectionnum);
                         } else {
                             $categoryname = $this->get_section_link($sectioninfo, $sectionnum, $categoryname);
@@ -1653,7 +1653,7 @@ class block_taskchain_navigation extends block_base {
             $this->content->text .= '</td>'."\n";
 
             // format category grade
-            if ($record->itemtype=='ungraded') {
+            if ($record->itemtype == 'ungraded') {
                 // do nothing
             } else {
                 $displaygrade = $this->format_displaygrade($record, $categoryhref);
@@ -1739,17 +1739,17 @@ class block_taskchain_navigation extends block_base {
             }
 
             $depth = $records[$id]->depth;
-            if ($this->config->minimumdepth==0 || $depth >= $this->config->minimumdepth) {
-                if ($this->config->maximumdepth==0 || $depth <= $this->config->maximumdepth) {
+            if ($this->config->minimumdepth == 0 || $depth >= $this->config->minimumdepth) {
+                if ($this->config->maximumdepth == 0 || $depth <= $this->config->maximumdepth) {
                     $depths[$depth] = true;
                 }
             }
 
             if ($this->config->categorycollapse) {
                 if (empty($records[$id]->sectionnums)) {
-                    if (isset($records[$id]->subgrades) && count($records[$id]->subgrades)==1) {
+                    if (isset($records[$id]->subgrades) && count($records[$id]->subgrades) == 1) {
                         $subgrade = array_shift($records[$id]->subgrades);
-                        if ($this->config->categorycollapse==1) {
+                        if ($this->config->categorycollapse == 1) {
                             $records[$id]->fullname = $subgrade->fullname;
                         }
                         if (isset($subgrade->sectionnums)) {
@@ -1778,14 +1778,14 @@ class block_taskchain_navigation extends block_base {
      * get_css_class
      *
      * @param int $type
-     *     1 : outer DIV
-     *     2 : main TABLE
-     *     3 : category TR
-     *     4 : category rowspan TH
-     *     5 : category name TD
-     *     6 : category score TD
-     *     7 : sections UL (requires $sectionnum > 0)
-     *     8 : section LI (requires $sectionnum > 0)
+     * 1 : outer DIV
+     * 2 : main TABLE
+     * 3 : category TR
+     * 4 : category rowspan TH
+     * 5 : category name TD
+     * 6 : category score TD
+     * 7 : sections UL (requires $sectionnum > 0)
+     * 8 : section LI (requires $sectionnum > 0)
      * @param xxx $oddeven (optional, default='')
      * @param xxx $record (optional, default=null)
      * @param xxx $sectionnum (optional, default=0)
@@ -1819,7 +1819,7 @@ class block_taskchain_navigation extends block_base {
                         break;
                     case 2: break;
                 }
-                if ($record->itemtype=='ungraded') {
+                if ($record->itemtype == 'ungraded') {
                     array_push($class, 'ungraded');
                 }
                 break;
@@ -1842,12 +1842,12 @@ class block_taskchain_navigation extends block_base {
                             array_push($class, $oddeven.'d'.$record->depth);
                         }
                         array_push($class, 'b1t', 'b1b', 'name');
-                        if ($record->itemtype=='course' || isset($record->subgrades) || (isset($record->rowspan) && $record->rowspan==1)) {
+                        if ($record->itemtype == 'course' || isset($record->subgrades) || (isset($record->rowspan) && $record->rowspan==1)) {
                             // don't show left border
                         } else {
                             // show border-left
                             array_push($class, 'b1l');
-                            if ($record->itemtype=='ungraded') {
+                            if ($record->itemtype == 'ungraded') {
                                 // the ungraded row has only one-cell
                                 // so it needs both left and right styles
                                 array_push($class, 'b1r');
@@ -1855,7 +1855,7 @@ class block_taskchain_navigation extends block_base {
                         }
                         break;
                 }
-                if ($sectionnum && $sectionnum==$this->config->displaysection && $showcurrentlocation) {
+                if ($sectionnum && $sectionnum == $this->config->displaysection && $showcurrentlocation) {
                     //$showcurrentlocation = false;
                     array_push($class, 'currentsection');
                 }
@@ -1867,12 +1867,12 @@ class block_taskchain_navigation extends block_base {
                 }
                 break;
             case 7: // sections UL
-                if ($record->itemtype=='ungraded') {
+                if ($record->itemtype == 'ungraded') {
                     array_push($class, 'ungraded');
                 }
                 break;
             case 8: // section LI
-                if ($sectionnum && $sectionnum==$this->config->displaysection && $showcurrentlocation) {
+                if ($sectionnum && $sectionnum == $this->config->displaysection && $showcurrentlocation) {
                     //$showcurrentlocation = false;
                     array_push($class, 'currentsection');
                 }
@@ -1889,7 +1889,7 @@ class block_taskchain_navigation extends block_base {
     /**
      * get_course_format
      *
-     * @param  object $course
+     * @param object $course
      * @return string course format
      */
     public function get_course_format($course) {
@@ -1945,7 +1945,7 @@ class block_taskchain_navigation extends block_base {
      * @return xxx
      */
     function get_section_link(&$sectioninfo, $sectionnum, $text) {
-        if ($text=='') {
+        if ($text == '') {
             $text = $this->get_default_sectiontext($sectionnum);
         }
         if (isset($sectioninfo[$sectionnum])) {
@@ -2086,7 +2086,7 @@ class block_taskchain_navigation extends block_base {
             if (isset($section->name)) {
                 $text = self::filter_text($section->name);
             }
-            if ($text=='') {
+            if ($text == '') {
                 $text = self::filter_text($section->summary);
                 if ($tags = trim($this->config->sectiontitletags)) {
                     $tags = preg_split('/[^a-zA-Z0-9]+/', $tags);
@@ -2115,7 +2115,7 @@ class block_taskchain_navigation extends block_base {
                 $text = trim(strip_tags($text));
             }
         }
-        if ($text=='') {
+        if ($text == '') {
             $text = $this->get_default_sectiontext($sectionnum);
         }
         return $text;
@@ -2143,7 +2143,7 @@ class block_taskchain_navigation extends block_base {
 
         foreach ($sections as $sectionnum => $section) {
 
-            if ($sectionnum==0 || ! array_key_exists($sectionnum, $sectionnums)) {
+            if ($sectionnum == 0 || ! array_key_exists($sectionnum, $sectionnums)) {
                 continue;
             }
 
@@ -2154,7 +2154,7 @@ class block_taskchain_navigation extends block_base {
             // check section visibility
             if ($canviewhiddensections) {
                 $uservisible = true;
-            } else if (get_class($section)=='section_info') {
+            } else if (get_class($section) == 'section_info') {
                 $uservisible = $section->uservisible;
             } else {
                 $uservisible = $section->visible;
@@ -2200,7 +2200,7 @@ class block_taskchain_navigation extends block_base {
      * @return xxx
      */
     function get_default_sectiontext($sectionnum) {
-        if ($this->config->sectiontype=='week' && $sectionnum > 0) {
+        if ($this->config->sectiontype == 'week' && $sectionnum > 0) {
             $dateformat = get_string('strftimedateshort');
             $date = $this->config->coursestartdate + 7200 + (($sectionnum - 1) * 604800);
             return userdate($date, $dateformat).' - '.userdate($date + 518400, $dateformat);
@@ -2299,9 +2299,9 @@ class block_taskchain_navigation extends block_base {
 
         if ($items = $DB->get_records_sql("SELECT $select FROM $from WHERE $where ORDER BY $order", $params)) {
             foreach ($items as $id => $item) {
-                if ($item->itemtype=='course' || $item->itemtype=='category') {
+                if ($item->itemtype == 'course' || $item->itemtype=='category') {
                     $categoryid = $item->iteminstance;
-                } else if ($item->itemtype=='mod') {
+                } else if ($item->itemtype == 'mod') {
                     $categoryid = $item->categoryid;
                 } else {
                     $categoryid = 0;
@@ -2370,7 +2370,7 @@ class block_taskchain_navigation extends block_base {
             }
         }
 
-        if ($showgrades==false) {
+        if ($showgrades == false) {
             foreach ($items as $id => $item) {
                 $items[$id]->usercount = 0;
                 $items[$id]->rawgrade = '';
@@ -2397,7 +2397,7 @@ class block_taskchain_navigation extends block_base {
             // get groupmode: 0=NOGROUPS, 1=VISIBLEGROUPS, 2=SEPARATEGROUPS
             $groupmode = groups_get_course_groupmode($COURSE);
 
-            if ($groupmode==NOGROUPS || $groupmode==VISIBLEGROUPS || has_capability('moodle/site:accessallgroups', $COURSE->context)) {
+            if ($groupmode == NOGROUPS || $groupmode==VISIBLEGROUPS || has_capability('moodle/site:accessallgroups', $COURSE->context)) {
                 // user can access all users and groups in the course
                 $mygroupsonly = false;
             } else {
@@ -2408,9 +2408,9 @@ class block_taskchain_navigation extends block_base {
 
             if ($mygroupsonly || $groupid || $groupingid) {
                 // select only users from specific group(s) in this course
-                $groupids = "SELECT id FROM {$CFG->prefix}groups WHERE courseid=$COURSE->id";
+                $groupids = "SELECT id FROM {$CFG->prefix}groups WHERE courseid = $COURSE->id";
                 if ($groupid) {
-                    $groupids .= " AND id =$groupid";
+                    $groupids .= " AND id = $groupid";
                 } else if ($groupingid) {
                     $groupids .= " AND id IN (SELECT groupid FROM {$CFG->prefix}groupings_groups WHERE groupingid = $groupingid)";
                 }
@@ -2460,22 +2460,22 @@ class block_taskchain_navigation extends block_base {
      */
     function locate_grade_category(&$records, $id) {
 
-        if ($records[$id]->itemtype=='course') {
+        if ($records[$id]->itemtype == 'course') {
             return 0;
         }
 
         $gradecategoryids = explode('/', trim($records[$id]->path, '/'));
-        if ($records[$id]->itemtype=='category') {
+        if ($records[$id]->itemtype == 'category') {
             array_pop($gradecategoryids);
         }
         $gradecategoryids = array_reverse($gradecategoryids);
 
         foreach ($gradecategoryids as $gradecategoryid) {
             foreach ($records as $record) {
-                if ($record->itemtype=='mod') {
+                if ($record->itemtype == 'mod') {
                     continue;
                 }
-                if ($record->gradecategoryid==$gradecategoryid) {
+                if ($record->gradecategoryid == $gradecategoryid) {
                     return $record->id;
                 }
             }
@@ -2499,12 +2499,12 @@ class block_taskchain_navigation extends block_base {
     function count_matching_chars($a, $b, $forward, $ignorecase=false) {
 
         $a_len = self::textlib('strlen', $a);
-        if ($a_len==0) {
+        if ($a_len == 0) {
             return 0;
         }
 
         $b_len = self::textlib('strlen', $b);
-        if ($b_len==0) {
+        if ($b_len == 0) {
             return 0;
         }
 
@@ -2513,7 +2513,7 @@ class block_taskchain_navigation extends block_base {
             $b = self::textlib('strtoupper', $b);
         }
 
-        if ($a_len==$b_len && $a==$b) {
+        if ($a_len == $b_len && $a==$b) {
             return $a_len;
         }
 
@@ -2521,11 +2521,11 @@ class block_taskchain_navigation extends block_base {
         $i_max = min($a_len, $b_len);
 
         if ($forward) {
-            while ($i<$i_max && self::textlib('substr', $a, $i, 1)==self::textlib('substr', $b, $i, 1)) {
+            while ($i<$i_max && self::textlib('substr', $a, $i, 1) == self::textlib('substr', $b, $i, 1)) {
                 $i++;
             }
         } else {
-            while ($i<$i_max && self::textlib('substr', $a, ($a_len - $i - 1), 1)==self::textlib('substr', $b, ($b_len - $i - 1), 1)) {
+            while ($i<$i_max && self::textlib('substr', $a, ($a_len - $i - 1), 1) == self::textlib('substr', $b, ($b_len - $i - 1), 1)) {
                 $i++;
             }
         }
@@ -2551,7 +2551,7 @@ class block_taskchain_navigation extends block_base {
                     $update = true;
                 }
             } else {
-                if (isset($options['coursedisplay']) && $options['coursedisplay']==1) {
+                if (isset($options['coursedisplay']) && $options['coursedisplay'] == 1) {
                     $options['coursedisplay'] = 0; // all sections on one page
                     $update = true;
                 }
@@ -2580,7 +2580,7 @@ class block_taskchain_navigation extends block_base {
         }
         $hiddensection = optional_param_array('hiddensection', array(), PARAM_INT);
 
-        if ($this->config->hiddensectionsstyle==1) {
+        if ($this->config->hiddensectionsstyle == 1) {
             // multi-select menu
             $hiddensection = array_flip($hiddensection);
             foreach ($hiddensection as $sectionnum => $i) {
@@ -2592,20 +2592,20 @@ class block_taskchain_navigation extends block_base {
         $show_section_ids = array();
 
         foreach ($sections as $sectionnum => $section) {
-            if ($sectionnum==0) {
+            if ($sectionnum == 0) {
                 continue; // shoudn't happen !!
             }
             if ($sectionnum > $this->config->numsections) {
                 continue; // section is not visible on course page
             }
             if (empty($hiddensection[$sectionnum])) {
-                if ($section->visible==0) {
+                if ($section->visible == 0) {
                     // section is hidden but teacher wants it to be visible
                     $sections[$sectionnum]->visible = 1;
                     $show_section_ids[] = $section->id;
                 }
             } else {
-                if ($section->visible==1) {
+                if ($section->visible == 1) {
                     // section is visble but teacher wants it to be hidden
                     $sections[$sectionnum]->visible = 0;
                     $hide_section_ids[] = $section->id;
@@ -2653,13 +2653,13 @@ class block_taskchain_navigation extends block_base {
             if (isset($mods)) {
                 foreach ($mods as $id => $mod) {
                     if (in_array($mod->section, $hide_section_ids)) {
-                        if ($mod->visible==1) {
+                        if ($mod->visible == 1) {
                             $mods[$id]->visibleold = $mods[$id]->visible;
                             $mods[$id]->visible = 0;
                         }
                     }
                     if (in_array($mod->section, $show_section_ids)) {
-                        if ($mod->visible==0) {
+                        if ($mod->visible == 0) {
                             $mods[$id]->visible = $mods[$id]->visibleold;
                         }
                     }
@@ -2702,14 +2702,14 @@ class block_taskchain_navigation extends block_base {
             $taillength = $this->config->$taillength; // 10
 
             // hiddensectionsstyle: 0=checkboxes, 1=multi-select menu
-            if ($this->config->hiddensectionsstyle==1) {
+            if ($this->config->hiddensectionsstyle == 1) {
                 $namelength -= 4;
                 $headlength -= 1;
                 $taillength -= 1;
             }
 
             // hiddensectionstitle: 0=number, 1=text, 2=number and text
-            if ($this->config->hiddensectionstitle==2) {
+            if ($this->config->hiddensectionstitle == 2) {
                 $namelength -= 4;
                 $headlength -= 3;
             }
@@ -2771,7 +2771,7 @@ class block_taskchain_navigation extends block_base {
         $marker = optional_param('marker', $marker, PARAM_INT);
 
         // update if necessary
-        if ($marker==$COURSE->marker) {
+        if ($marker == $COURSE->marker) {
             // do nothing
         } else {
             if (has_capability('moodle/course:setcurrentsection', $this->page->context)) {
@@ -2805,6 +2805,26 @@ class block_taskchain_navigation extends block_base {
             return ''; // no groups in this course
         }
 
+        // Get the number of student members in each group in this course.
+        $sql = 'SELECT groupid, COUNT(*) AS membercount';
+        $sql .= ' FROM {groups_members} gm,'.
+                     ' {groups} g,'.
+                     ' {role_assignments} ra';
+        $sql .= ' WHERE gm.groupid = g.id'.
+                  ' AND g.courseid = ?'.
+                  ' AND gm.userid = ra.userid'.
+                  ' AND ra.contextid = ?';
+                  ' AND ra.roleid = ?'.
+        $sql .= ' GROUP BY gm.groupid';
+        $sql .= ' HAVING COUNT(*) > 0';
+        $params = [
+            $COURSE->id,
+            $COURSE->context->id,
+            $DB->get_field('role', 'id', ['shortname' => 'student']),
+        ];
+        $groupcounts = $DB->get_records_sql_menu($sql, $params);
+        $groupingcounts = [];
+
         // Get all groupings and groups for this course.
         $gdata = groups_get_course_data($COURSE->id);
 
@@ -2812,6 +2832,11 @@ class block_taskchain_navigation extends block_base {
         $groupids = [];
         if (isset($gdata->groups)) {
             $groupids = array_fill_keys(array_keys($gdata->groups), 0);
+            foreach ($groupids as $groupid => $count) {
+                if (empty($groupcounts[$groupid])) {
+                    unset($groupcounts[$groupid]);
+                }
+            }
         }
 
         // Map: grouping_id => array of group_ids in that grouping.
@@ -2825,6 +2850,18 @@ class block_taskchain_navigation extends block_base {
             foreach ($gdata->mappings as $mapping) {
                 $groupid = (int)$mapping->groupid;
                 $groupingid = (int)$mapping->groupingid;
+
+                 // Skip groups that have no student members.
+                if (empty($groupcounts[$groupid])) {
+                    unset($groupids[$groupid]);
+                    continue;
+                }
+
+                 // Increment number of students in this grouping.
+                if (empty($groupingcounts[$groupingid])) {
+                    $groupingcounts[$groupingid] = 0;
+                }
+                $groupingcounts[$groupingid] += $groupcounts[$groupid];
 
                 // Increment how many groupings this group belongs to.
                 if (! isset($groupids[$groupid])) {
@@ -2840,16 +2877,31 @@ class block_taskchain_navigation extends block_base {
             }
         }
 
-        // Detect any groups that are not in any grouping (shouldn't be any).
-        $groupingids[0] = array_keys(array_filter($groupids, function ($count) {
-            return ($count === 0);
-        }));
+        // Detect any groups that have student members but are not in any grouping.
+        $groupingids[0] = array_keys(array_filter($groupids, function ($count, $groupid) use ($groupcounts) {
+            if (empty($groupcounts[$groupid])) {
+                return false; // No student members.
+            } else {
+                return ($count == 0); // No grouping.
+            }
+        }, ARRAY_FILTER_USE_BOTH));
+
         unset($groupids); // No longer needed.
 
         // Remove all empty groupings (those with no member groups).
         $groupingids = array_filter($groupingids, function ($groupids) {
             return (count($groupids));
         });
+
+        // Set total number of students who are not in a grouping.
+        if (array_key_exists(0, $groupingids)) {
+            $groupingcounts[0] = 0;
+            foreach ($groupingids[0] as $groupid) {
+                if (array_key_exists($groupid, $groupcounts)) {
+                    $groupingcounts[0] += $groupcounts[$groupid];
+                }
+            }
+        }
 
         // If there is only one grouping, we don't show groupnames.
         if (count($groupingids) <= 1) {
@@ -2864,7 +2916,20 @@ class block_taskchain_navigation extends block_base {
         foreach ($groupingids as $groupingid => $groupids) {
 
             if ($showgroupingname) {
-                $name = $gdata->groupings[$groupingid]->name;
+                if (array_key_exists($groupingid, $gdata->groupings)) {
+                    $name = $gdata->groupings[$groupingid]->name;
+                } else if ($groupingid == 0) {
+                    //$name = get_string('group', 'nogrouping');
+                    $name = 'No grouping';
+                } else {
+                    // Shouldn't happen !!
+                    $name = 'Unknown grouping: '.$groupingid;
+                }
+                if ($this->config->groupscountusers) {
+                    if (array_key_exists($groupingid, $groupingcounts)) {
+                        $name .= ' ('.$groupingcounts[$groupingid].')';
+                    }
+                }
                 $params = ['value' => -$groupingid, 'class' => 'text-bold'];
                 if ($groupingid == $targetgroupingid) {
                     $params['selected'] = 'selected';
@@ -2880,6 +2945,11 @@ class block_taskchain_navigation extends block_base {
                         $name = '└ '.$name;
                     } else {
                         $name = '├ '.$name;
+                    }
+                }
+                if ($this->config->groupscountusers) {
+                    if (array_key_exists($groupid, $groupcounts)) {
+                        $name .= ' ('.$groupcounts[$groupid].')';
                     }
                 }
                 $params = ['value' => $groupid];
@@ -2966,7 +3036,7 @@ class block_taskchain_navigation extends block_base {
         // get groupmode: 0=NOGROUPS, 1=VISIBLEGROUPS, 2=SEPARATEGROUPS
         $groupmode = groups_get_course_groupmode($COURSE);
 
-        if ($groupmode==NOGROUPS || $groupmode==VISIBLEGROUPS || has_capability('moodle/site:accessallgroups', $COURSE->context)) {
+        if ($groupmode == NOGROUPS || $groupmode==VISIBLEGROUPS || has_capability('moodle/site:accessallgroups', $COURSE->context)) {
             // user can access all users and groups in the course
             $mygroupsonly = false;
         } else {
@@ -2980,6 +3050,8 @@ class block_taskchain_navigation extends block_base {
             $groupids = "SELECT id FROM {$CFG->prefix}groups WHERE courseid=$COURSE->id";
             if ($groupid) {
                 $groupids .= " AND id=$groupid";
+            } else if ($groupingid) {
+                $groupids .= " AND id IN (SELECT groupid FROM {$CFG->prefix}groupings_groups WHERE groupingid = $groupingid)";
             }
             if ($mygroupsonly) {
                 $groupids = "SELECT groupid FROM {$CFG->prefix}groups_members WHERE userid=$USER->id AND groupid IN ($groupids)";
@@ -3077,6 +3149,7 @@ class block_taskchain_navigation extends block_base {
         // if we have already set the groupid,
         // just return it and stop here
         if (isset($this->groupid)) {
+            // echo "A: {$this->groupid}, {$this->groupingid}<br>";
             return [$this->groupid, $this->groupingid];
         }
     
@@ -3086,7 +3159,8 @@ class block_taskchain_navigation extends block_base {
     
         // if groups are not used in this course,
         // set to groupid to zero and stop here
-        if (empty($COURSE->groupmode) || $COURSE->groupmode==NOGROUPS) {
+        if (empty($COURSE->groupmode) || $COURSE->groupmode == NOGROUPS) {
+            // echo "B: {$this->groupid}, {$this->groupingid}<br>";
             return [$this->groupid, $this->groupingid];
         }
     
@@ -3107,6 +3181,7 @@ class block_taskchain_navigation extends block_base {
         // Get the active group and grouping for this course.
         $groupid = self::get_session_value('group', $groupmode);
         $groupingid = self::get_session_value('grouping', $groupmode);
+        // echo "C: {$this->groupid}, {$this->groupingid}<br>";
     
         // Override previously set $groupid with incoming form value, if any
         // and then store $groupid locally, if it is valid
@@ -3128,7 +3203,7 @@ class block_taskchain_navigation extends block_base {
     
         // If groupid is set, check that it is viewable by the current user.
         if ($groupid) {
-            if ($groupmode==SEPARATEGROUPS) {
+            if ($groupmode == SEPARATEGROUPS) {
                 $groups = groups_get_all_groups($COURSE->id, $USER->id);
             } else {
                 $groups = groups_get_all_groups($COURSE->id); // all groups
@@ -3136,7 +3211,7 @@ class block_taskchain_navigation extends block_base {
             if ($groups && count($groups)) {
                 if (array_key_exists($groupid, $groups)) {
                     $this->groupid = $groupid;
-                } else if ($groupmode==SEPARATEGROUPS) {
+                } else if ($groupmode == SEPARATEGROUPS) {
                     $this->groupid = key($groups);
                 }
             }
@@ -3148,7 +3223,8 @@ class block_taskchain_navigation extends block_base {
         self::set_session_value('grouping', $groupmode, $this->groupingid);
     
         // return valid groupid and groupingid.
-        return [$groupid, $groupingid];
+        // echo "D: {$this->groupid}, {$this->groupingid}<br>";
+        return [$this->groupid, $this->groupingid];
     }
     
     /**
@@ -3159,7 +3235,7 @@ class block_taskchain_navigation extends block_base {
      * and additionally keyed by the course default grouping ID to separate contexts.
      *
      * Globals:
-     * - $COURSE stdClass  Course record (expects ->id, ->defaultgroupingid)
+     * - $COURSE stdClass Course record (expects ->id, ->defaultgroupingid)
      * - $SESSION stdClass PHP session storage object
      *
      * @param string $name Either 'group' or 'grouping' (determines which value is read)
@@ -3169,7 +3245,7 @@ class block_taskchain_navigation extends block_base {
     public static function get_session_value($name, $groupmode) {
         global $COURSE, $SESSION;
     
-        $active = 'active'.$name; // e.g. "activegroup"
+        $active = 'active'.$name; // e.g. "activegroup" or "activegrouping"
         $courseid = $COURSE->id;
         $defaultid = $COURSE->defaultgroupingid;
     
@@ -3205,16 +3281,16 @@ class block_taskchain_navigation extends block_base {
      * additionally keyed by the course default grouping ID.
      *
      * Globals:
-     * - $COURSE stdClass  Course record (expects ->id, ->defaultgroupingid)
+     * - $COURSE stdClass Course record (expects ->id, ->defaultgroupingid)
      * - $SESSION stdClass PHP session storage object
      *
      * Side effects:
      * - Mutates $SESSION
      * - Calls set_user_preference() to persist the value per user
      *
-     * @param string            $name      Either 'group' or 'grouping' (determines which value is written)
-     * @param int|string        $groupmode Course group mode (NOGROUPS|VISIBLEGROUPS|SEPARATEGROUPS) or 'aag' for access-all-groups
-     * @param int               $value     The group ID or grouping ID to store (0 if none)
+     * @param string $name Either 'group' or 'grouping' (determines which value is written)
+     * @param int|string $groupmode Course group mode (NOGROUPS|VISIBLEGROUPS|SEPARATEGROUPS) or 'aag' for access-all-groups
+     * @param int $value The group ID or grouping ID to store (0 if none)
      * @return void
      */
     public static function set_session_value($name, $groupmode, $value) {
@@ -3232,11 +3308,11 @@ class block_taskchain_navigation extends block_base {
     /**
      * trim_text
      *
-     * @param   string   $text
-     * @param   integer  $textlength (optional, default=28)
-     * @param   integer  $headlength (optional, default=10)
-     * @param   integer  $taillength (optional, default=10)
-     * @return  string
+     * @param string $text
+     * @param integer $textlength (optional, default=28)
+     * @param integer $headlength (optional, default=10)
+     * @param integer $taillength (optional, default=10)
+     * @return string
      */
     static public function trim_text($text, $textlength=28, $headlength=10, $taillength=10) {
         $strlen = self::textlib('strlen', $text);
@@ -3252,8 +3328,8 @@ class block_taskchain_navigation extends block_base {
      * get_userfields
      *
      * @param string $tableprefix name of database table prefix in query
-     * @param array  $extrafields extra fields to be included in result (do not include TEXT columns because it would break SELECT DISTINCT in MSSQL and ORACLE)
-     * @param string $idalias     alias of id field
+     * @param array $extrafields extra fields to be included in result (do not include TEXT columns because it would break SELECT DISTINCT in MSSQL and ORACLE)
+     * @param string $idalias alias of id field
      * @param string $fieldprefix prefix to add to all columns in their aliases, does not apply to 'id'
      * @return string
      */
@@ -3301,7 +3377,7 @@ class block_taskchain_navigation extends block_base {
                 $fieldprefix = " AS $fieldprefix";
             }
             foreach ($fields as $i => $field) {
-                $fields[$i] = "$tableprefix$field".($field=='id' ? $idalias : ($fieldprefix=='' ? '' : "$fieldprefix$field"));
+                $fields[$i] = "$tableprefix$field".($field == 'id' ? $idalias : ($fieldprefix=='' ? '' : "$fieldprefix$field"));
             }
         }
         return implode(',', $fields); // 'u.id AS userid, u.username, u.firstname, u.lastname, u.picture, u.imagealt, u.email';
@@ -3314,8 +3390,8 @@ class block_taskchain_navigation extends block_base {
      * in Moodle 2.0 - 2.3, "numsections" is a field in the "course" table
      * in Moodle >= 2.4, "numsections" is in the "course_format_options" table
      *
-     * @uses   $DB
-     * @param  mixed   $course, either object (DB record) or integer (id)
+     * @uses $DB
+     * @param mixed $course, either object (DB record) or integer (id)
      * @return integer $numsections
      */
     static public function get_numsections($course) {
